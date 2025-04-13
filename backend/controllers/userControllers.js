@@ -6,6 +6,8 @@ const generateToken = require("../config/generateToken");
 //@route           GET /api/user?search=
 //@access          Public
 const allUsers = asyncHandler(async (req, res) => {
+  console.log("Current user making the request:", req.user);
+
   const keyword = req.query.search
     ? {
         $or: [
@@ -16,6 +18,7 @@ const allUsers = asyncHandler(async (req, res) => {
     : {};
 
   const users = await User.find(keyword).find({ _id: { $ne: req.user._id } });
+  console.log("Found users:", users);
   res.send(users);
 });
 

@@ -29,7 +29,6 @@ import ProfileModal from "./ProfileModal";
 import NotificationBadge from "react-notification-badge";
 import { Effect } from "react-notification-badge";
 import { getSender } from "../../config/ChatLogics";
-import UserListItem from "../userAvatar/UserListItem";
 import { ChatState } from "../../Context/ChatProvider";
 
 function SideDrawer() {
@@ -77,7 +76,12 @@ function SideDrawer() {
         },
       };
 
-      const { data } = await axios.get(`/api/user?search=${search}`, config);
+      const { data } = await axios.get(
+        `/api/user?search=${search}&timestamp=${Date.now()}`,
+        config
+      );
+      console.log("Raw search results from API:", data);
+      console.log("Current user ID:", user._id);
 
       setLoading(false);
       setSearchResult(data);
@@ -94,8 +98,6 @@ function SideDrawer() {
   };
 
   const accessChat = async (userId) => {
-    console.log(userId);
-
     try {
       setLoadingChat(true);
       const config = {
@@ -122,6 +124,43 @@ function SideDrawer() {
     }
   };
 
+  // ✅ Inline UserListItem
+  const UserListItem = ({ user, handleFunction }) => {
+    return (
+      <Box
+        onClick={handleFunction}
+        cursor="pointer"
+        bg="#E8E8E8"
+        _hover={{
+          background: "#38B2AC",
+          color: "white",
+        }}
+        w="100%"
+        d="flex"
+        alignItems="center"
+        color="black"
+        px={3}
+        py={2}
+        mb={2}
+        borderRadius="lg"
+      >
+        <Avatar
+          mr={2}
+          size="sm"
+          cursor="pointer"
+          name={user.name}
+          src={user.pic}
+        />
+        <Box>
+          <Text>{user.name}</Text>
+          <Text fontSize="xs">
+            <b>Email:</b> {user.email}
+          </Text>
+        </Box>
+      </Box>
+    );
+  };
+
   return (
     <>
       <Box
@@ -142,7 +181,7 @@ function SideDrawer() {
           </Button>
         </Tooltip>
         <Text fontSize="2xl" fontFamily="Work sans">
-          Talk-A-Tive
+          NM Chat
         </Text>
         <div>
           <Menu>
@@ -181,7 +220,7 @@ function SideDrawer() {
             </MenuButton>
             <MenuList>
               <ProfileModal user={user}>
-                <MenuItem>My Profile</MenuItem>{" "}
+                <MenuItem>My Profile</MenuItem>
               </ProfileModal>
               <MenuDivider />
               <MenuItem onClick={logoutHandler}>Logout</MenuItem>
@@ -207,13 +246,18 @@ function SideDrawer() {
             {loading ? (
               <ChatLoading />
             ) : (
-              searchResult?.map((user) => (
-                <UserListItem
-                  key={user._id}
-                  user={user}
-                  handleFunction={() => accessChat(user._id)}
-                />
-              ))
+              searchResult
+                ?.filter((u) => u._id !== user._id)
+                .map((user) => {
+                  console.log("Rendering user:", user);
+                  return (
+                    <UserListItem
+                      key={user._id}
+                      user={user}
+                      handleFunction={() => accessChat(user._id)}
+                    />
+                  );
+                })
             )}
             {loadingChat && <Spinner ml="auto" d="flex" />}
           </DrawerBody>

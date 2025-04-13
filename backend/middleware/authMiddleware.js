@@ -12,19 +12,22 @@ const protect = asyncHandler(async (req, res, next) => {
     try {
       token = req.headers.authorization.split(" ")[1];
 
-      //decodes token id
-      const decoded = jwt.verify(token, process.env.JWT_SECRET);
+      const decoded = jwt.verify(token, "superSecret123");
 
       req.user = await User.findById(decoded.id).select("-password");
 
+      console.log("Authenticated user:", req.user); // 👈 Add this
+
       next();
     } catch (error) {
+      console.error("JWT verification failed:", error); // 👈 Add this
       res.status(401);
       throw new Error("Not authorized, token failed");
     }
   }
 
   if (!token) {
+    console.error("No token provided in header"); // 👈 Add this
     res.status(401);
     throw new Error("Not authorized, no token");
   }
